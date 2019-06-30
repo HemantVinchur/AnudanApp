@@ -14,43 +14,47 @@ router.post('/donar_register', validators.userValidator.registerReqValidator, (r
 
         let payload = req.body;
         UserModel.findOne({ Email: payload.Email })
-        .then((donardata) => {
-            if(donardata){
-            return res.status(200).json({
-                statusCode: 400,
-                message: "user already exists",
-                data: {}
+            .then((donardata) => {
+                if (donardata) {
+                    return res.status(200).json({
+                        statusCode: 400,
+                        message: "user already exists",
+                        data: {}
+                    })
+                }
+            }).catch((err) => {
+                console.err(err);
+                return res.status(200).json({
+                    statusCode: 400,
+                    message: "user already exists",
+                    data: {}
+                })
             })
-            }
-    }).catch((err) => {
-        console.err(err);
-        return res.status(200).json({
-            statusCode: 400,
-            message: "user already exists",
-            data: {}
-        })
-    })
         let hashObj = functions.hashPassword(payload.Password);
         console.log(hashObj);
         delete payload.password
         payload.salt = hashObj.salt;
         payload.Password = hashObj.hash;
         UserModel.create(payload)
-        .then((data) =>{
-            return    res.status(200).json({
-                statusCode: 400,
-                message: "Something went wrong",
-                data: {}
-            })
-            }).catch((err)=>{
+            .then((data) => {
+                return res.status(200).json({
+                    statusCode: 400,
+                    message: "Something went wrong",
+                    data: {}
+                })
+            }).catch((err) => {
 
                 console.err(err);
                 return res.status(200).json({
                     statusCode: 400,
                     message: "user already exists",
                     data: {}
+                })
             })
-        })
+    } catch (err) {
+        console.log(err);
+    }
+});
 //Donar login
 router.post('/login', (req, res) => {
     try {
@@ -251,10 +255,10 @@ router.put('/update-donar/:id', (req, res) => {
 
 router.get('/profile/:Email', (req, res) => {
 
-        DonationModel.findOne({ Email: req.params.Email }, (err, data) => {
-            console.log('created', data)
-            res.send(data)
-        })
+    DonationModel.findOne({ Email: req.params.Email }, (err, data) => {
+        console.log('created', data)
+        res.send(data)
+    })
 })
 
 
