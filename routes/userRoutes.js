@@ -10,7 +10,7 @@ const DonationModel = require('../models/Donation');
 const mongodb = require('mongodb');
 //Donar_register
 router.post('/donar_register', validators.userValidator.registerReqValidator, (req, res) => {
-    try {
+    
 
         let payload = req.body;
         UserModel.findOne({ Email: payload.Email })
@@ -22,38 +22,38 @@ router.post('/donar_register', validators.userValidator.registerReqValidator, (r
                         data: {}
                     })
                 }
+                let hashObj = functions.hashPassword(payload.Password);
+                console.log(hashObj);
+                delete payload.password
+                payload.salt = hashObj.salt;
+                payload.Password = hashObj.hash;
+
+                UserModel.create(payload)
+                    .then((data) => {
+                        return res.status(200).json({
+                            statusCode: 200,
+                            message: "Sucess",
+                            data:data
+                        })
+                    }).catch((err) => {
+
+                        console.error(err);
+                        return res.status(200).json({
+                            statusCode: 400,
+                            message: "Something went wrong",
+                            data: {}
+                        })
+                    })
+
             }).catch((err) => {
                 console.err(err);
-                return res.status(200).json({
-                    statusCode: 400,
-                    message: "user already exists",
-                    data: {}
-                })
-            })
-        let hashObj = functions.hashPassword(payload.Password);
-        console.log(hashObj);
-        delete payload.password
-        payload.salt = hashObj.salt;
-        payload.Password = hashObj.hash;
-        UserModel.create(payload)
-            .then((data) => {
                 return res.status(200).json({
                     statusCode: 400,
                     message: "Something went wrong",
                     data: {}
                 })
-            }).catch((err) => {
-
-                console.err(err);
-                return res.status(200).json({
-                    statusCode: 400,
-                    message: "user already exists",
-                    data: {}
-                })
             })
-    } catch (err) {
-        console.log(err);
-    }
+
 });
 //Donar login
 router.post('/login', (req, res) => {
@@ -103,6 +103,60 @@ router.post('/login', (req, res) => {
     }
 });
 
+//Admin register
+router.post('/admin_register', Admin_validator.adminValidator.registerAdminValidator, (req, res) => {
+    try {
+
+        let payload = req.body;
+        AdminModel.findOne({ Email: payload.Email }, (err, data) => {
+            if (err) {
+                return res.json({
+                    statusCode: 400,
+                    message: "Something went wrong",
+                    data: {}
+                });
+            }
+            if (data) {
+                return res.status(200).json({
+                    statusCode: 404,
+                    message: "User already exists",
+                    data: {}
+                })
+            }
+            let hashObj = functions.hashPassword(payload.Password);
+            console.log(hashObj);
+            delete payload.password;
+            payload.salt = hashObj.salt;
+            payload.Password = hashObj.hash;
+            console.log("Sign-up block executed");
+            console.log('0000000')
+            AdminModel.create(payload, (err, data) => {
+                console.log('111111111')
+
+                if (!data) {
+                    console.log('222222222')
+                    res.status(200).json({
+                        statusCode: 400,
+                        message: "Something went wrong",
+                        data: {}
+                    });
+                }
+                res.status(200).json({
+                    statusCode: 201,
+                    message: "Success",
+                    data: data
+                })
+            })
+        })
+    } catch (err) {
+        console.log(err);
+        res.status(400).json({
+            statusCode: 400,
+            message: "Something went wrong",
+            data: {}
+        })
+    }
+})
 
 //Admin_login
 router.post('/admin_login', (req, res) => {
